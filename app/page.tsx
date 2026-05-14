@@ -59,40 +59,46 @@ export default function Home() {
           Productos destacados
         </h2>
 
-        <div className="grid grid-cols-3 gap-6">
-          {productos.map((producto) => (
-            <div
-              key={producto.id}
-              className="bg-white rounded-2xl shadow-md p-4"
-            >
-              {producto.imagen && (
-                <img
-                  src={producto.imagen}
-                  className="w-full h-60 object-cover rounded-xl"
-                />
-              )}
-
-              <h3 className="text-2xl font-bold mt-4">
-                {producto.nombre}
-              </h3>
-
-              <p className="text-gray-500 mt-2">
-                Stock: {producto.stock}
-              </p>
-
-              <p className="text-3xl font-bold mt-4">
-                {producto.precio}
-              </p>
-
-              <a
-                href={`/producto/${producto.id}`}
-                className="block w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl text-center"
+        {productos.length === 0 ? (
+          <p className="text-2xl text-gray-500">
+            Aún no hay productos guardados.
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-6">
+            {productos.map((producto) => (
+              <div
+                key={producto.id}
+                className="bg-white rounded-2xl shadow-md p-4"
               >
-                Ver producto
-              </a>
-            </div>
-          ))}
-        </div>
+                {producto.imagen && (
+                  <img
+                    src={producto.imagen}
+                    className="w-full h-60 object-cover rounded-xl"
+                  />
+                )}
+
+                <h3 className="text-2xl font-bold mt-4">
+                  {producto.nombre}
+                </h3>
+
+                <p className="text-gray-500 mt-2">
+                  Stock: {producto.stock}
+                </p>
+
+                <p className="text-3xl font-bold mt-4">
+                  {producto.precio}
+                </p>
+
+                <a
+                  href={`/producto/${producto.id}`}
+                  className="block w-full mt-4 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl text-center"
+                >
+                  Ver producto
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   )

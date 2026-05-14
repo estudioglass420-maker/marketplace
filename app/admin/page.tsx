@@ -3,12 +3,23 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
-export default function Admin() {
+export default function AdminPage() {
+  const [password, setPassword] = useState("")
+  const [logged, setLogged] = useState(false)
+
   const [nombre, setNombre] = useState("")
   const [precio, setPrecio] = useState("")
   const [stock, setStock] = useState("")
   const [imagen, setImagen] = useState("")
   const [productos, setProductos] = useState<any[]>([])
+
+  function entrar() {
+    if (password === "1234") {
+      setLogged(true)
+    } else {
+      alert("Contraseña incorrecta")
+    }
+  }
 
   async function cargarProductos() {
     const { data, error } = await supabase
@@ -26,8 +37,10 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    cargarProductos()
-  }, [])
+    if (logged) {
+      cargarProductos()
+    }
+  }, [logged])
 
   async function guardarProducto() {
     if (!nombre || !precio || !stock) {
@@ -37,10 +50,10 @@ export default function Admin() {
 
     const { error } = await supabase.from("products").insert([
       {
-        nombre,
-        precio,
+        nombre: nombre,
+        precio: precio,
         stock: Number(stock),
-        imagen,
+        imagen: imagen,
       },
     ])
 
@@ -56,6 +69,52 @@ export default function Admin() {
     setImagen("")
 
     cargarProductos()
+  }
+
+  async function eliminarProducto(id: number) {
+    const confirmar = confirm("¿Seguro que quieres eliminar este producto?")
+
+    if (!confirmar) return
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      alert("Error al eliminar producto")
+      console.log(error)
+      return
+    }
+
+    cargarProductos()
+  }
+
+  if (!logged) {
+    return (
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+        <div className="bg-white rounded-3xl shadow-lg p-10 w-full max-w-md">
+          <h1 className="text-4xl font-bold mb-6 text-center">
+            Panel Admin
+          </h1>
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border p-4 rounded-xl w-full mb-4"
+          />
+
+          <button
+            onClick={entrar}
+            className="w-full bg-black text-white py-4 rounded-xl text-xl"
+          >
+            Entrar
+          </button>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -139,12 +198,19 @@ export default function Admin() {
                     <p className="text-gray-500">
                       Stock: {producto.stock}
                     </p>
+
+                    <p className="text-xl font-bold mt-2">
+                      {producto.precio}
+                    </p>
                   </div>
                 </div>
 
-                <p className="text-2xl font-bold">
-                  {producto.precio}
-                </p>
+                <button
+                  onClick={() => eliminarProducto(producto.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-xl"
+                >
+                  Eliminar
+                </button>
               </div>
             ))}
           </div>
