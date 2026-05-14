@@ -1,9 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
 
 export default function Carrito() {
   const [productos, setProductos] = useState<any[]>([])
+  const [nombre, setNombre] = useState("")
+  const [telefono, setTelefono] = useState("")
+  const [direccion, setDireccion] = useState("")
 
   useEffect(() => {
     const carritoGuardado = localStorage.getItem("carrito")
@@ -11,15 +15,51 @@ export default function Carrito() {
     setProductos(carrito)
   }, [])
 
+  const total = productos.reduce(
+    (suma, producto) => suma + producto.precio * producto.cantidad,
+    0
+  )
+
   function vaciarCarrito() {
     localStorage.removeItem("carrito")
     setProductos([])
   }
 
-  const total = productos.reduce(
-    (suma, producto) => suma + producto.precio * producto.cantidad,
-    0
-  )
+  async function finalizarPedido() {
+    if (!nombre || !telefono || !direccion) {
+      alert("Llena nombre, teléfono y dirección")
+      return
+    }
+
+    if (productos.length === 0) {
+      alert("Tu carrito está vacío")
+      return
+    }
+
+    const { error } = await supabase.from("orders").insert([
+      {
+        nombre,
+        telefono,
+        direccion,
+        productos,
+        total,
+        estado: "pendiente",
+      },
+    ])
+
+    if (error) {
+      alert("Error al guardar pedido")
+      console.log(error)
+      return
+    }
+
+    alert("Pedido guardado correctamente")
+
+    setNombre("")
+    setTelefono("")
+    setDireccion("")
+    vaciarCarrito()
+  }
 
   return (
     <main className="min-h-screen bg-gray-100 p-10">
@@ -62,16 +102,50 @@ export default function Carrito() {
               <span>${total.toLocaleString()}</span>
             </div>
 
-            <button className="w-full mt-8 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-2xl text-xl">
-              Pagar ahora
-            </button>
+            <div className="mt-8 border-t pt-8">
+              <h2 className="text-3xl font-bold mb-5">
+                Datos de entrega
+              </h2>
 
-            <button
-              onClick={vaciarCarrito}
-              className="w-full mt-4 bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl text-xl"
-            >
-              Vaciar carrito
-            </button>
+              <div className="grid grid-cols-1 gap-4">
+                <input
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  type="text"
+                  placeholder="Nombre completo"
+                  className="border p-4 rounded-xl"
+                />
+
+                <input
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value)}
+                  type="text"
+                  placeholder="Teléfono"
+                  className="border p-4 rounded-xl"
+                />
+
+                <textarea
+                  value={direccion}
+                  onChange={(e) => setDireccion(e.target.value)}
+                  placeholder="Dirección completa"
+                  className="border p-4 rounded-xl"
+                />
+              </div>
+
+              <button
+                onClick={finalizarPedido}
+                className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl text-xl"
+              >
+                Finalizar pedido
+              </button>
+
+              <button
+                onClick={vaciarCarrito}
+                className="w-full mt-4 bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl text-xl"
+              >
+                Vaciar carrito
+              </button>
+            </div>
           </>
         )}
       </div>

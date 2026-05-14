@@ -11,7 +11,9 @@ export default function AdminPage() {
   const [precio, setPrecio] = useState("")
   const [stock, setStock] = useState("")
   const [imagen, setImagen] = useState("")
+
   const [productos, setProductos] = useState<any[]>([])
+  const [pedidos, setPedidos] = useState<any[]>([])
 
   function entrar() {
     if (password === "1234") {
@@ -22,23 +24,27 @@ export default function AdminPage() {
   }
 
   async function cargarProductos() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("products")
       .select("*")
       .order("id", { ascending: false })
 
-    if (error) {
-      alert("Error al cargar productos")
-      console.log(error)
-      return
-    }
-
     setProductos(data || [])
+  }
+
+  async function cargarPedidos() {
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .order("id", { ascending: false })
+
+    setPedidos(data || [])
   }
 
   useEffect(() => {
     if (logged) {
       cargarProductos()
+      cargarPedidos()
     }
   }, [logged])
 
@@ -48,20 +54,14 @@ export default function AdminPage() {
       return
     }
 
-    const { error } = await supabase.from("products").insert([
+    await supabase.from("products").insert([
       {
-        nombre: nombre,
-        precio: precio,
+        nombre,
+        precio,
         stock: Number(stock),
-        imagen: imagen,
+        imagen,
       },
     ])
-
-    if (error) {
-      alert("Error al guardar producto")
-      console.log(error)
-      return
-    }
 
     setNombre("")
     setPrecio("")
@@ -73,20 +73,9 @@ export default function AdminPage() {
 
   async function eliminarProducto(id: number) {
     const confirmar = confirm("¿Seguro que quieres eliminar este producto?")
-
     if (!confirmar) return
 
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", id)
-
-    if (error) {
-      alert("Error al eliminar producto")
-      console.log(error)
-      return
-    }
-
+    await supabase.from("products").delete().eq("id", id)
     cargarProductos()
   }
 
@@ -123,6 +112,47 @@ export default function AdminPage() {
         <h1 className="text-5xl font-bold mb-8">
           Panel administrador
         </h1>
+
+        <div className="bg-white rounded-3xl shadow-lg p-8 mb-8">
+          <h2 className="text-3xl font-bold mb-6">
+            Pedidos recibidos
+          </h2>
+
+          <div className="space-y-5">
+            {pedidos.map((pedido) => (
+              <div key={pedido.id} className="border rounded-2xl p-5">
+                <div className="flex justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold">
+                      Pedido #{pedido.id}
+                    </h3>
+
+                    <p>Cliente: {pedido.nombre}</p>
+                    <p>Teléfono: {pedido.telefono}</p>
+                    <p>Dirección: {pedido.direccion}</p>
+                    <p>Estado: {pedido.estado}</p>
+                  </div>
+
+                  <p className="text-3xl font-bold">
+                    ${Number(pedido.total).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="mt-4 bg-gray-100 rounded-xl p-4">
+                  <h4 className="font-bold mb-2">
+                    Productos:
+                  </h4>
+
+                  {pedido.productos?.map((producto: any, index: number) => (
+                    <p key={index}>
+                      {producto.nombre} - Cantidad: {producto.cantidad}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div className="bg-white rounded-3xl shadow-lg p-8 mb-8">
           <h2 className="text-3xl font-bold mb-6">
