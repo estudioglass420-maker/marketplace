@@ -10,7 +10,9 @@ export default function AdminPage() {
   const [nombre, setNombre] = useState("")
   const [precio, setPrecio] = useState("")
   const [stock, setStock] = useState("")
+  const [categoria, setCategoria] = useState("")
   const [imagen, setImagen] = useState("")
+  const [archivoImagen, setArchivoImagen] = useState<File | null>(null)
 
   const [productos, setProductos] = useState<any[]>([])
   const [pedidos, setPedidos] = useState<any[]>([])
@@ -48,25 +50,54 @@ export default function AdminPage() {
     }
   }, [logged])
 
+  async function subirImagen() {
+    if (!archivoImagen) {
+      return imagen
+    }
+
+    const nombreArchivo = `${Date.now()}-${archivoImagen.name}`
+
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(nombreArchivo, archivoImagen)
+
+    if (error) {
+      alert("Error al subir imagen")
+      console.log(error)
+      return ""
+    }
+
+    const { data } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(nombreArchivo)
+
+    return data.publicUrl
+  }
+
   async function guardarProducto() {
-    if (!nombre || !precio || !stock) {
-      alert("Llena nombre, precio y stock")
+    if (!nombre || !precio || !stock || !categoria) {
+      alert("Llena nombre, precio, stock y categoría")
       return
     }
+
+    const urlImagen = await subirImagen()
 
     await supabase.from("products").insert([
       {
         nombre,
         precio,
         stock: Number(stock),
-        imagen,
+        categoria,
+        imagen: urlImagen,
       },
     ])
 
     setNombre("")
     setPrecio("")
     setStock("")
+    setCategoria("")
     setImagen("")
+    setArchivoImagen(null)
 
     cargarProductos()
   }
@@ -77,6 +108,15 @@ export default function AdminPage() {
 
     await supabase.from("products").delete().eq("id", id)
     cargarProductos()
+  }
+
+  async function cambiarEstadoPedido(id: number, estado: string) {
+    await supabase
+      .from("orders")
+      .update({ estado })
+      .eq("id", id)
+
+    cargarPedidos()
   }
 
   if (!logged) {
@@ -121,7 +161,7 @@ export default function AdminPage() {
           <div className="space-y-5">
             {pedidos.map((pedido) => (
               <div key={pedido.id} className="border rounded-2xl p-5">
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-5">
                   <div>
                     <h3 className="text-2xl font-bold">
                       Pedido #{pedido.id}
@@ -130,7 +170,10 @@ export default function AdminPage() {
                     <p>Cliente: {pedido.nombre}</p>
                     <p>Teléfono: {pedido.telefono}</p>
                     <p>Dirección: {pedido.direccion}</p>
-                    <p>Estado: {pedido.estado}</p>
+
+                    <p className="mt-2 font-bold">
+                      Estado: {pedido.estado}
+                    </p>
                   </div>
 
                   <p className="text-3xl font-bold">
@@ -139,15 +182,43 @@ export default function AdminPage() {
                 </div>
 
                 <div className="mt-4 bg-gray-100 rounded-xl p-4">
-                  <h4 className="font-bold mb-2">
-                    Productos:
-                  </h4>
+                  <h4 className="font-bold mb-2">Productos:</h4>
 
                   {pedido.productos?.map((producto: any, index: number) => (
                     <p key={index}>
                       {producto.nombre} - Cantidad: {producto.cantidad}
                     </p>
                   ))}
+                </div>
+
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => cambiarEstadoPedido(pedido.id, "pendiente")}
+                    className="bg-gray-500 text-white px-4 py-2 rounded-xl"
+                  >
+                    Pendiente
+                  </button>
+
+                  <button
+                    onClick={() => cambiarEstadoPedido(pedido.id, "pagado")}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-xl"
+                  >
+                    Pagado
+                  </button>
+
+                  <button
+                    onClick={() => cambiarEstadoPedido(pedido.id, "enviado")}
+                    className="bg-orange-500 text-white px-4 py-2 rounded-xl"
+                  >
+                    Enviado
+                  </button>
+
+                  <button
+                    onClick={() => cambiarEstadoPedido(pedido.id, "entregado")}
+                    className="bg-green-500 text-white px-4 py-2 rounded-xl"
+                  >
+                    Entregado
+                  </button>
                 </div>
               </div>
             ))}
@@ -184,11 +255,33 @@ export default function AdminPage() {
               className="border p-3 rounded-xl"
             />
 
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="border p-3 rounded-xl"
+            >
+              <option value="">Selecciona categoría</option>
+              <option value="Bongs">Bongs</option>
+              <option value="Grinders">Grinders</option>
+              <option value="Sopletes">Sopletes</option>
+              <option value="Tazas">Tazas</option>
+              <option value="Accesorios">Accesorios</option>
+            </select>
+
             <input
               value={imagen}
               onChange={(e) => setImagen(e.target.value)}
               type="text"
-              placeholder="URL de imagen"
+              placeholder="URL de imagen opcional"
+              className="border p-3 rounded-xl"
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setArchivoImagen(e.target.files ? e.target.files[0] : null)
+              }
               className="border p-3 rounded-xl"
             />
           </div>
@@ -227,6 +320,10 @@ export default function AdminPage() {
 
                     <p className="text-gray-500">
                       Stock: {producto.stock}
+                    </p>
+
+                    <p className="text-gray-500">
+                      Categoría: {producto.categoria || "Sin categoría"}
                     </p>
 
                     <p className="text-xl font-bold mt-2">

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase"
 
 export default function Home() {
   const [productos, setProductos] = useState<any[]>([])
+  const [busqueda, setBusqueda] = useState("")
 
   async function cargarProductos() {
     const { data, error } = await supabase
@@ -24,6 +25,10 @@ export default function Home() {
     cargarProductos()
   }, [])
 
+  const productosFiltrados = productos.filter((producto) =>
+    producto.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  )
+
   return (
     <main className="min-h-screen bg-gray-100">
       <header className="bg-yellow-400 shadow-md">
@@ -31,20 +36,18 @@ export default function Home() {
           <h1 className="text-3xl font-bold">MiMarket</h1>
 
           <input
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
             type="text"
             placeholder="Buscar productos..."
             className="flex-1 p-3 rounded-lg outline-none"
           />
 
-          <button className="bg-black text-white px-5 py-3 rounded-lg">
-            Buscar
-          </button>
-
           <a
             href="/carrito"
-            className="bg-white px-4 py-2 rounded-xl font-bold"
+            className="bg-white px-4 py-3 rounded-xl font-bold"
           >
-            🛒
+            🛒 Carrito
           </a>
         </div>
       </header>
@@ -59,16 +62,16 @@ export default function Home() {
           Productos destacados
         </h2>
 
-        {productos.length === 0 ? (
+        {productosFiltrados.length === 0 ? (
           <p className="text-2xl text-gray-500">
-            Aún no hay productos guardados.
+            No encontramos productos con esa búsqueda.
           </p>
         ) : (
           <div className="grid grid-cols-3 gap-6">
-            {productos.map((producto) => (
+            {productosFiltrados.map((producto) => (
               <div
                 key={producto.id}
-                className="bg-white rounded-2xl shadow-md p-4"
+                className="bg-white rounded-2xl shadow-md p-4 hover:scale-105 transition duration-300"
               >
                 {producto.imagen && (
                   <img
