@@ -1,0 +1,43 @@
+export default function Producto() {
+  return (
+    <main className="min-h-screen bg-gray-100 p-10">
+
+      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-lg p-10 grid grid-cols-2 gap-10">
+
+        <div>
+          <img
+            src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9"
+            className="w-full rounded-2xl"
+          />
+        </div>
+
+        <div>
+
+          <p className="text-green-600 font-bold">
+            Nuevo | Envío gratis
+          </p>
+
+          <h1 className="text-5xl font-bold mt-4">
+            iPhone 15 Pro Max
+          </h1>
+
+          <p className="text-4xl mt-6 font-bold">
+            $28,999
+          </p>
+
+          <p className="mt-6 text-gray-600 text-lg">
+            El nuevo iPhone con cámara profesional,
+            procesador ultra rápido y batería mejorada.
+          </p>
+
+          <button className="mt-8 bg-blue-500 text-white px-10 py-4 rounded-2xl text-xl">
+            Comprar ahora
+          </button>
+
+        </div>
+
+      </div>
+
+    </main>
+  )
+}
