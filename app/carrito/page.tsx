@@ -1,149 +1,140 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
 
-export default function Carrito() {
-  const [productos, setProductos] = useState<any[]>([])
-  const [nombre, setNombre] = useState("")
-  const [telefono, setTelefono] = useState("")
-  const [direccion, setDireccion] = useState("")
+export default function CarritoPage() {
+  const [carrito, setCarrito] = useState<any[]>([])
 
   useEffect(() => {
     const carritoGuardado = localStorage.getItem("carrito")
-    const carrito = carritoGuardado ? JSON.parse(carritoGuardado) : []
-    setProductos(carrito)
+
+    if (carritoGuardado) {
+      setCarrito(JSON.parse(carritoGuardado))
+    }
   }, [])
 
-  const total = productos.reduce(
-    (suma, producto) => suma + producto.precio * producto.cantidad,
-    0
-  )
+  function eliminarProducto(index: number) {
+    const nuevoCarrito = [...carrito]
 
-  function vaciarCarrito() {
-    localStorage.removeItem("carrito")
-    setProductos([])
+    nuevoCarrito.splice(index, 1)
+
+    setCarrito(nuevoCarrito)
+
+    localStorage.setItem(
+      "carrito",
+      JSON.stringify(nuevoCarrito)
+    )
   }
 
-  async function finalizarPedido() {
-    if (!nombre || !telefono || !direccion) {
-      alert("Llena nombre, teléfono y dirección")
-      return
-    }
+  const total = carrito.reduce((acc, producto) => {
+    return (
+      acc +
+      Number(producto.precio) * producto.cantidad
+    )
+  }, 0)
 
-    if (productos.length === 0) {
-      alert("Tu carrito está vacío")
-      return
-    }
+  async function pagarConMercadoPago() {
+    try {
+      const response = await fetch(
+        "/api/create-preference",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productos: carrito,
+          }),
+        }
+      )
 
-    const { error } = await supabase.from("orders").insert([
-      {
-        nombre,
-        telefono,
-        direccion,
-        productos,
-        total,
-        estado: "pendiente",
-      },
-    ])
+      const data = await response.json()
 
-    if (error) {
-      alert("Error al guardar pedido")
+      if (data.init_point) {
+        window.location.href = data.init_point
+      }
+    } catch (error) {
       console.log(error)
-      return
+      alert("Error al iniciar pago")
     }
-
-    alert("Pedido guardado correctamente")
-
-    setNombre("")
-    setTelefono("")
-    setDireccion("")
-    vaciarCarrito()
   }
 
   return (
     <main className="min-h-screen bg-gray-100 p-10">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-lg p-10">
-        <h1 className="text-4xl font-bold mb-8">
-          Mi carrito
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-5xl font-black mb-10">
+          Tu carrito
         </h1>
 
-        {productos.length === 0 ? (
-          <p className="text-2xl text-gray-500">
-            Tu carrito está vacío
-          </p>
+        {carrito.length === 0 ? (
+          <div className="bg-white rounded-3xl p-16 text-center shadow-md">
+            <p className="text-3xl text-gray-500">
+              Tu carrito está vacío.
+            </p>
+          </div>
         ) : (
           <>
             <div className="space-y-5">
-              {productos.map((producto, index) => (
+              {carrito.map((producto, index) => (
                 <div
                   key={index}
-                  className="border rounded-2xl p-5 flex justify-between items-center"
+                  className="bg-white rounded-3xl shadow-md p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between"
                 >
-                  <div>
-                    <h2 className="text-2xl font-bold">
-                      {producto.nombre}
-                    </h2>
+                  <div className="flex items-center gap-5">
+                    {producto.imagen && (
+                      <img
+                        src={producto.imagen}
+                        className="w-28 h-28 object-cover rounded-2xl"
+                      />
+                    )}
 
-                    <p className="text-gray-500">
-                      Cantidad: {producto.cantidad}
-                    </p>
+                    <div>
+                      <h2 className="text-2xl font-black">
+                        {producto.nombre}
+                      </h2>
+
+                      <p className="text-gray-500 mt-2">
+                        Cantidad: {producto.cantidad}
+                      </p>
+
+                      <p className="text-3xl font-black text-green-600 mt-3">
+                        $
+                        {(
+                          Number(producto.precio) *
+                          producto.cantidad
+                        ).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
 
-                  <p className="text-2xl font-bold">
-                    ${producto.precio.toLocaleString()}
-                  </p>
+                  <button
+                    onClick={() =>
+                      eliminarProducto(index)
+                    }
+                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-2xl font-bold"
+                  >
+                    Eliminar
+                  </button>
                 </div>
               ))}
             </div>
 
-            <div className="mt-8 border-t pt-6 flex justify-between text-3xl font-bold">
-              <span>Total:</span>
-              <span>${total.toLocaleString()}</span>
-            </div>
+            <div className="bg-white rounded-3xl shadow-md p-8 mt-10">
+              <div className="flex justify-between items-center">
+                <h2 className="text-4xl font-black">
+                  Total
+                </h2>
 
-            <div className="mt-8 border-t pt-8">
-              <h2 className="text-3xl font-bold mb-5">
-                Datos de entrega
-              </h2>
-
-              <div className="grid grid-cols-1 gap-4">
-                <input
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  type="text"
-                  placeholder="Nombre completo"
-                  className="border p-4 rounded-xl"
-                />
-
-                <input
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
-                  type="text"
-                  placeholder="Teléfono"
-                  className="border p-4 rounded-xl"
-                />
-
-                <textarea
-                  value={direccion}
-                  onChange={(e) => setDireccion(e.target.value)}
-                  placeholder="Dirección completa"
-                  className="border p-4 rounded-xl"
-                />
+                <p className="text-5xl font-black text-green-600">
+                  ${total.toLocaleString()}
+                </p>
               </div>
 
               <button
-                onClick={finalizarPedido}
-                className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl text-xl"
+                onClick={pagarConMercadoPago}
+                className="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white py-5 rounded-2xl text-2xl font-black transition"
               >
-                Finalizar pedido
-              </button>
-
-              <button
-                onClick={vaciarCarrito}
-                className="w-full mt-4 bg-red-500 hover:bg-red-600 text-white py-4 rounded-2xl text-xl"
-              >
-                Vaciar carrito
+                Pagar con Mercado Pago
               </button>
             </div>
           </>

@@ -272,14 +272,87 @@ export default function Home() {
         )}
       </section>
 
-      <footer className="bg-white border-t mt-10">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-gray-500">
-          <p className="font-bold text-gray-700">MiMarket</p>
-          <p className="mt-1">
-            Tienda online creada para vender fácil, rápido y seguro.
-          </p>
+    <footer className="bg-white border-t mt-16">
+  <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+      <div>
+        <h3 className="text-2xl font-black">
+          MiMarket
+        </h3>
+
+        <p className="text-gray-500 mt-4 leading-relaxed">
+          Ecommerce moderno para comprar productos de forma rápida,
+          segura y sencilla.
+        </p>
+      </div>
+
+      <div>
+        <h4 className="font-black text-lg mb-4">
+          Información
+        </h4>
+
+        <div className="flex flex-col gap-3 text-gray-600">
+          <a
+            href="/terminos"
+            className="hover:text-black transition"
+          >
+            Términos y condiciones
+          </a>
+
+          <a
+            href="#"
+            className="hover:text-black transition"
+          >
+            Política de privacidad
+          </a>
+
+          <a
+            href="#"
+            className="hover:text-black transition"
+          >
+            Política de devoluciones
+          </a>
         </div>
-      </footer>
+      </div>
+
+      <div>
+        <h4 className="font-black text-lg mb-4">
+          Ayuda
+        </h4>
+
+        <div className="flex flex-col gap-3 text-gray-600">
+          <a href="#" className="hover:text-black transition">
+            Envíos
+          </a>
+
+          <a href="#" className="hover:text-black transition">
+            Métodos de pago
+          </a>
+
+          <a href="#" className="hover:text-black transition">
+            Soporte
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <h4 className="font-black text-lg mb-4">
+          Contacto
+        </h4>
+
+        <div className="flex flex-col gap-3 text-gray-600">
+          <p>Guadalajara, México</p>
+          <p>contacto@mimarket.com</p>
+          <p>Atención personalizada</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="border-t mt-10 pt-6 text-center text-gray-500">
+      © 2026 MiMarket. Todos los derechos reservados.
+    </div>
+  </div>
+</footer>
     </main>
   )
 }
